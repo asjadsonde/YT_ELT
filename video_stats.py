@@ -2,6 +2,8 @@ import requests
 
 import json
 
+from datetime import date
+
 import os
 
 from dotenv import load_dotenv 
@@ -106,7 +108,7 @@ try:
             for item in data.get("items"):
 
                 video_id = item["id"]
-                statisitcs = item["statistics"]
+                statistics = item["statistics"]
                 snippet = item["snippet"]
                 contentDetails = item["contentDetails"]
 
@@ -115,16 +117,26 @@ try:
                         "title":snippet["title"],
                         "publishedAt":snippet["publishedAt"],
                         "duration":contentDetails["duration"],
-                        "viewCount":data.get("viewCount"),
-                        "likeCount":data.get("likeCount"),
-                        "commentCount":data.get("commentCount")
+                        "viewCount":statistics.get("viewCount"),
+                        "likeCount":statistics.get("likeCount"),
+                        "commentCount":statistics.get("commentCount")
                         }
                 
                 extracted_data.append(video_data)
 
         return extracted_data
 
-                    
+
+except requests.exceptions.RequestException as e:
+    raise e
+
+
+try:
+    def save_to_json(extracted_data):
+        file_path = f"./data/YT_ETL-{date.today()}.json"
+
+        with open(file_path,"w",encoding="utf-8") as json_outfile:
+            json.dump(extracted_data,json_outfile,indent=4,ensure_ascii=False)
 
 
 
@@ -137,5 +149,6 @@ except requests.exceptions.RequestException as e:
 if __name__ == "__main__":
     playlistId = get_playlist_Id()
     video_ids = get_video_ids(playlistId)
-    print(extract_video_data(video_ids))
+    extracted_data = extract_video_data(video_ids)
+    save_to_json(extracted_data)
 
